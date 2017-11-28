@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.1)
+
 set(app_target testGLFW)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -45,8 +47,25 @@ file( GLOB file_headers *.hpp *.h )
 # Generate an executable
 add_executable( ${app_target} ${file_sources} ${file_headers} )
 
-add_dependencies( ${app_target} radiumEngine radiumCore radium_assets)
 target_compile_options(${app_target} PRIVATE -fexceptions)
+
+################################################################################
+# Assets                                                                       #
+################################################################################
+#
+set(SHADER_DIR "${RADIUM_ROOT_DIR}/Shaders")
+
+if(MSVC OR MSVC_IDE OR MINGW)
+add_custom_target( assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${SHADER_DIR} "${CMAKE_BINARY_DIR}/Shaders"
+    COMMENT "Copying shaders and other ressources" VERBATIM
+)
+else()
+    add_custom_target( assets
+            COMMAND ${CMAKE_COMMAND} -E create_symlink ${SHADER_DIR} "${CMAKE_BINARY_DIR}/Shaders"
+            COMMENT "Linking (symlink) shaders and other ressources" VERBATIM
+            )
+endif()
 
 
 if(UNIX AND NOT APPLE)
@@ -60,11 +79,12 @@ endif()
 target_link_libraries( ${app_target} # target
     ${RADIUM_LIBRARIES} # Radium libs
     ${GLBINDING_LIBRARIES}           # Radium dep
+    ${GLOBJECTS_LIBRARIES}
     ${NANOGUI_LIBRARY}
     ${GLFW_LIBRARY}
     ${ADDITIONAL_LIBS}
 )
 
-if (MSVC)
-    set_property( TARGET ${app_target} PROPERTY IMPORTED_LOCATION "${RADIUM_SUBMODULES_INSTALL_DIRECTORY}/bin" )
-endif(MSVC)
+add_dependencies (${app_target} assets)
+
+

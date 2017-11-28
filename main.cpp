@@ -146,8 +146,8 @@ int main()
     std::unique_ptr<Ra::Engine::Camera> camera ( new Ra::Engine::Camera(height, width));
     Ra::Engine::ShaderProgramManager::createInstance("Shaders/Default.vert.glsl",
                                                      "Shaders/Default.frag.glsl");
-    std::unique_ptr<Ra::Engine::Renderer> renderer(new Ra::Engine::ForwardRenderer(width, height));
-    renderer->initialize();
+    std::unique_ptr<Ra::Engine::Renderer> renderer(new Ra::Engine::ForwardRenderer());
+    renderer->initialize(width, height);
 
 
 
