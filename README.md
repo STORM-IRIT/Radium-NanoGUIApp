@@ -10,6 +10,6 @@ cmake .. -DCMAKE_MODULE_PATH=YOUR/PATH/TO/Radium-Engine/cmake
 ```
 
 Dependencies:
-* nanogui
-* glfw
+* nanogui (i.e. clone and compile from https://github.com/wjakob/nanogui )
+* glfw (i.e apt-get install libglw3-dev)
 
