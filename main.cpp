@@ -35,7 +35,7 @@
 class MinimalComponent : public Ra::Engine::Component
 {
 public:
-    MinimalComponent() : Ra::Engine::Component("Minimal Component") {}
+    MinimalComponent( Ra::Engine::Entity* entity) : Ra::Engine::Component("Minimal Component", entity) {}
 
     /// This function is called when the component is properly
     /// setup, i.e. it has an entity.
@@ -43,10 +43,10 @@ public:
     {
         m_speed = 0.01f;
         // Create a cube mesh render object.
-        std::shared_ptr<Ra::Engine::Mesh> display(new Ra::Engine::Mesh("Cube"));
+        std::shared_ptr<Ra::Engine::Mesh> display(new Ra::Engine::Mesh("CubeCMP"));
         display->loadGeometry(Ra::Core::MeshUtils::makeBox({0.1f, 0.1f, 0.1f}));
         auto renderObject = Ra::Engine::RenderObject::createRenderObject("CubeRO", this,
-                                                                         Ra::Engine::RenderObjectType::Fancy,
+                                                                         Ra::Engine::RenderObjectType::Geometry,
                                                                          display);
         addRenderObject(renderObject);
     }
@@ -71,6 +71,14 @@ public:
 class MinimalSystem : public Ra::Engine::System
 {
 public:
+    inline MinimalSystem() : System() {
+      Ra::Engine::Entity* e = Ra::Engine::RadiumEngine::getInstance()->getEntityManager()->createEntity("CubeENT");
+      _c = new MinimalComponent (e);
+      e->addComponent(_c);
+      registerComponent(e, _c);
+      _c->initialize();
+    }
+
     void generateTasks(Ra::Core::TaskQueue *q, const Ra::Engine::FrameInfo &info) override
     {
         // We check that our component is here.
@@ -80,6 +88,13 @@ public:
         // Create a new task which wil call c->spin() when executed.
         q->registerTask(new Ra::Core::FunctionTask(std::bind(&MinimalComponent::spin, c), "spin"));
     }
+
+    void initNanoGui(nanogui::FormHelper*gui){
+      gui->addVariable("speed", _c->m_speed)->setSpinnable(true);
+    }
+
+private:
+    MinimalComponent* _c;
 };
 
 /// I/O processing
@@ -143,7 +158,8 @@ int main()
     glfwMakeContextCurrent(window);
     globjects::init(globjects::Shader::IncludeImplementation::Fallback);
 
-    std::unique_ptr<Ra::Engine::Camera> camera ( new Ra::Engine::Camera(height, width));
+    auto entity = engine->getEntityManager()->createEntity( "Camera" );
+    std::unique_ptr<Ra::Engine::Camera> camera (new Ra::Engine::Camera( entity, "Camera", height, width ));
     Ra::Engine::ShaderProgramManager::createInstance("Shaders/Default.vert.glsl",
                                                      "Shaders/Default.frag.glsl");
     std::unique_ptr<Ra::Engine::Renderer> renderer(new Ra::Engine::ForwardRenderer());
@@ -156,14 +172,8 @@ int main()
     camera->setPosition({0,1,1});
     camera->setDirection({0,-1,-1});
 
-    Ra::Engine::System* sys = new MinimalSystem;
+    MinimalSystem* sys = new MinimalSystem;
     engine->registerSystem("Minimal system", sys);
-    Ra::Engine::Entity* e = engine->getEntityManager()->createEntity("Cube");
-    MinimalComponent* c = new MinimalComponent;
-    e->addComponent(c);
-    sys->registerComponent(e, c);
-    c->initialize();
-
 
     // Initialize nanogui
     nanogui::Screen* screen = new nanogui::Screen();
@@ -171,7 +181,7 @@ int main()
 
     nanogui::FormHelper* gui = new nanogui::FormHelper(screen);
     nanogui::ref<nanogui::Window>ngWindow = gui->addWindow({10,10}, "Gui");
-    gui->addVariable("speed", c->m_speed)->setSpinnable(true);
+    sys->initNanoGui(gui);
 
     screen->setVisible(true);
     screen->performLayout();
