@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 set(app_target testGLFW)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(glfw REQUIRED)
 find_package(nanogui REQUIRED)
@@ -10,7 +10,7 @@ find_package(Radium REQUIRED)
 
 
 # use Radium's common compilation options
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${RADIUM_ROOT_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${RADIUM_ROOT_DIR}/cmake)
 include (CompileFlags)
 
 if ( NOT CMAKE_PREFIX_PATH )
